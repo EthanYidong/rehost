@@ -8,7 +8,7 @@ description = "A tool I wrote to use in CTFs (TryHackMe, HackTheBox, etc.) to ho
 homepage = "https://github.com/ethanyidong/rehost"
 documentaion = "https://github.com/ethanyidong/rehost"
 repository = "https://github.com/ethanyidong/rehost"
-readme = "https://github.com/ethanyidong/rehost"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
