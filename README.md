@@ -5,6 +5,9 @@ A tool I wrote to use in CTFs (TryHackMe, HackTheBox, etc.) to host files to tra
 Written in rust so it's probably secure or something like that blah blah but like don't use this in production dummy
 
 ## To install:
+There's binaries in the releases
+
+## To build:
 To install cargo if you don't have it already:
 
 `curl https://sh.rustup.rs -sSf | sh` 
