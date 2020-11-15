@@ -1,2 +1,27 @@
-[[files]]
+# Run with -o to replace these vars with env vars.
+# For example, if the env var $IP is defined and -o is specified, {ip} will be replaced by the value in $IP
+[vars]
+ip = "192.168.1.42"
+port = "4444"
+
+# Local rehosting, will be hosted at /example.toml
+[[file]]
+path = "examples/example.toml"
+
+# Basic rehosting a remote file, will be hosted at /linpeas.sh
+[[file]]
 url = "https://raw.githubusercontent.com/carlospolop/privilege-escalation-awesome-scripts-suite/master/linPEAS/linpeas.sh"
+
+# Rename rehosting a remote file, will be hosted at /revshell.php instead of /php-reverse-shell.php
+[[file]]
+url = "https://raw.githubusercontent.com/pentestmonkey/php-reverse-shell/master/php-reverse-shell.php"
+rename = "revshell.php"
+
+# Replace the ip and port definitions with the custom vars
+[[file.replace]]
+from = "$ip = '127.0.0.1';"
+to = "$ip = '{ip}';"
+
+[[file.replace]]
+from = "$port = 1234;"
+to = "$port = {port};"

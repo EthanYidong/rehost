@@ -1,8 +1,14 @@
 [package]
 name = "rehost"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["EthanYidong <ethanyidong@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "A tool I wrote to use in CTFs (TryHackMe, HackTheBox, etc.) to host tools to transfer to target machines."
+homepage = "https://github.com/ethanyidong/rehost"
+documentaion = "https://github.com/ethanyidong/rehost"
+repository = "https://github.com/ethanyidong/rehost"
+readme = "https://github.com/ethanyidong/rehost"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,3 +20,5 @@ tokio = { version = "0.2", features = ["full"] }
 
 toml = "0.5"
 serde = { version = "1.0", features = ["derive"] }
+
+regex = "1.4"

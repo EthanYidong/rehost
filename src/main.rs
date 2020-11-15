@@ -9,6 +9,8 @@ use reqwest::{Client, Url};
 
 use serde::Deserialize;
 
+use regex::{Regex, Captures};
+
 use std::path::PathBuf;
 use std::convert::Infallible;
 use std::net::{IpAddr, SocketAddr};
@@ -17,10 +19,10 @@ use std::fs::read_to_string;
 use std::sync::Arc;
 
 #[derive(Clap)]
-#[clap(version = "0.1", author = "Ethan T. <ethanyidong@gmail.com>")]
+#[clap(version = "0.2", author = "Ethan T. <ethanyidong@gmail.com>")]
 struct CliOpts {
     // TODO: add link to docs
-    /// Path to .toml config file (see {} for configuration docs)
+    /// Path to .toml config file (see https://github.com/EthanYidong/rehost for configuration docs)
     config: PathBuf,
     /// Host IP address to bind to
     #[clap(short, long, default_value = "0.0.0.0")]
@@ -28,11 +30,16 @@ struct CliOpts {
     /// Host port number to bind to
     #[clap(short, long, default_value = "8000")]
     port: u16,
+    /// Override config vars with env vars
+    #[clap(short = 'o', long = "override")]
+    use_env: bool
 }
 
 #[derive(Deserialize)]
 struct Config {
-    files: Vec<FileServe>
+    vars: HashMap<String, String>,
+    #[serde(rename = "file")]
+    files: Vec<FileServe>,
 }
 
 #[derive(Deserialize)]
@@ -40,6 +47,14 @@ struct FileServe {
     #[serde(flatten)]
     location: FileLocation,
     rename: Option<String>,
+    #[serde(default)]
+    replace: Vec<Replacement>,
+}
+
+#[derive(Deserialize)]
+struct Replacement {
+    from: String,
+    to: String,
 }
 
 #[derive(Deserialize)]
@@ -84,16 +99,21 @@ async fn server(file_contents: Arc<HashMap<String, String>>, req: Request<Body>)
 async fn main() {
     // Read CLI options from clap
     let opts = CliOpts::parse();
+    let use_env = opts.use_env;
 
     // Read config data from config file
     let config_str = read_to_string(opts.config).expect("Error reading config");
-    let config_data = toml::from_str::<Config>(&config_str).expect("Error deserializing toml");
+    let Config{vars, files} = toml::from_str::<Config>(&config_str).expect("Error deserializing toml");
 
     // Get file content
     let mut file_contents = HashMap::new();
     let client = Client::new();
-    for file in config_data.files {
-        let (mut name, contents) = match file.location {
+
+    // Regex for file replacement
+    let regex = Regex::new(r"([^\\])\{(\w*)\}").expect("Error creating RegEx");
+
+    for file in files {
+        let (mut name, mut contents) = match file.location {
             FileLocation::Local{path} => {
                 // Fetch file from local fs
                 let path = PathBuf::from(path);
@@ -112,6 +132,22 @@ async fn main() {
                 (file_name, contents)
             },
         };
+
+        for re in file.replace {
+            let to = regex.replace_all(&re.to, |caps: &Captures| {
+                if use_env {
+                    std::env::var(&caps[2].to_uppercase()).ok().map(|var| format!("{}{}", &caps[1], var))
+                } else {
+                    None
+                }.unwrap_or(
+                    match vars.get(&caps[2]) {
+                        Some(s) => format!("{}{}", &caps[1], s),
+                        None => String::from(&caps[0]),
+                    }
+                )
+            }).replace(r"\{", "{").replace(r"\}", "}");
+            contents = contents.replace(&re.from, &to);
+        }
 
         // Rename if specified
         if let Some(rn) = file.rename {
